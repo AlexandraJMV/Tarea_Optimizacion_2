@@ -1,4 +1,5 @@
 from particle import Particle
+import copy
 
 class Bpso():
     def __init__(self, initial_matriz:list, poblation:list, num_dimensions:list, cells:int, constrain:int, iteraciones=1000, enjambre=100) -> None:
@@ -14,9 +15,6 @@ class Bpso():
         """
         self.__poblation = poblation
         self.__num_dimensions = num_dimensions
-        self.__pos_best_global = []
-        self.__pos_best_global_aux = []
-        self.__best_fitness = 1234567890123456789012345678901234567890
         self.__initial_matriz = initial_matriz
         self.__cells = cells
         self.__constrain = constrain
@@ -34,7 +32,7 @@ class Bpso():
         Por criterio de termino
         Por cada particula en el enjambre
         inicializar el local best como infinito
-        utilizar la funcion particle.evaluate()
+        utilizar la funcion particle.evaluate
         evaluar si la particula tiene el mejor fitness
         En caso de serlo actualizar los valores para en nuevo local best
         Si aun quedan particulas por evaluar, seguir con la siguiente
@@ -47,26 +45,39 @@ class Bpso():
         retorna el global best
         """
         iteracion = 0
+        global_best = 1234567890123456789012345678901234567890
+        pos_best = []
+        pos_best_aux = []
         while iteracion < self.__criterio_termino:
             local_best = 1234567890123456789012345678901234567890
             local_pos = []
             local_pos_aux = []
             for particula in self.__swarm:
                 particula.evaluate()
-                if particula.get_fitness() < local_best:
-                    local_best = particula.get_fitness()
-                    local_pos = particula.get_position()
-                    local_pos_aux = particula.get_position_aux()
+
+                particle_local = particula.get_fitness()
+                if particle_local < local_best:
+                    local_best = particle_local
+                    local_pos = copy.deepcopy(particula.get_position())
+                    local_pos_aux = copy.deepcopy(particula.get_position_aux())
             
-            if local_best < self.__best_fitness:
-                self.__best_fitness = local_best
-                self.__pos_best_global = local_pos
-                self.__pos_best_global_aux = local_pos_aux
+            if local_best < global_best:
+                global_best = local_best
+                pos_best = copy.deepcopy(local_pos)
+                pos_best_aux = copy.deepcopy(local_pos_aux)
+                
+            
             
             for particula in self.__swarm:
-                particula.update_velocity(self.__pos_best_global)
+                best = copy.deepcopy(pos_best)
+                aux = copy.deepcopy(pos_best_aux)
+                fitness = particula.get_fitness()
+                particula.update_velocity(best)
                 particula.update_position()
+                particula.set_best_position(best)
+                particula.set_best_position_aux(aux)
+                particula.set_best_fitness(global_best)
             
             iteracion += 1
 
-        return self.__pos_best_global, self.__pos_best_global_aux, self.__best_fitness
+        return [pos_best, pos_best_aux, global_best]

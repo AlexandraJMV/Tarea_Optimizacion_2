@@ -1,4 +1,4 @@
-def leer_archivo():
+def leer_archivo(text="instancias.txt"):
 
     # Inicializamos las variables
     matrices = []
@@ -7,7 +7,7 @@ def leer_archivo():
     matriz = []
 
     # Abrimos el archivo en modo lectura
-    with open('instancias.txt', 'r') as f:
+    with open(text, 'r') as f:
 
         # Leemos el archivo línea por línea
         for line in f.readlines():

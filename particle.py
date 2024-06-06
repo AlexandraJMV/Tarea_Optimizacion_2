@@ -1,6 +1,7 @@
 import random
 import math
 from collections import Counter
+import copy
 
 class Particle:
     def __init__(self, num_dimensions:int, ciudadano:list, matrix:list, cells:int, constrain:int, index:int) -> None:
@@ -27,7 +28,7 @@ class Particle:
         self.__position = ciudadano.copy()
 
         # Velocidad de la particula
-        self.__velocity = []
+        self.__velocity = [[random.random() for _ in range(self.__cells)] for _ in range(self.__num_dimensions)]
 
         # Mejor posiciones y fitness de la particula
         self.__best_position = []
@@ -36,11 +37,6 @@ class Particle:
 
         # Fitness de la particula
         self.__fitness = 1234567890123456789012345678901234567890
-
-        # Inicializacion de las velocidades
-        for i in range(self.__num_dimensions):
-            fila = [random.random() for i in range(self.__cells)]
-            self.__velocity.append(fila)
 
 
     def evaluate(self) -> None:
@@ -56,8 +52,8 @@ class Particle:
 
         if self.__fitness < self.__best_fitness:
             self.__best_fitness = self.__fitness
-            self.__best_position = self.__position.copy()
-            self.__best_position_aux = self.__position_aux.copy()
+            self.__best_position = copy.deepcopy(self.__position)
+            self.__best_position_aux = copy.deepcopy(self.__position_aux)
 
     
     def update_velocity(self, pos_best_global:list) -> None:
@@ -72,7 +68,6 @@ class Particle:
             for j in range(self.__cells):
                 r1=random.random()
                 r2=random.random()
-
                 vel_cognitive = c1*r1*(self.__best_position[i][j] - self.__position[i][j])
                 vel_social = c2*r2*(pos_best_global[i][j] - self.__position[i][j])
                 self.__velocity[i][j] = weight*self.__velocity[i][j] + vel_cognitive + vel_social
@@ -83,14 +78,9 @@ class Particle:
         Aqui se debera actualizar la posicion de la particula
         """
         for i in range(self.__num_dimensions):
-            lista = [self.__velocity[i][j] for j in range(self.__cells)]
-            sigmund = self.sigmund(lista)
-
-            flag = True
             for j in range(self.__cells):
-                if sigmund[j] == max(sigmund) and flag:
+                if random.random() < self.sigmund(self.__velocity[i][j]):
                     self.__position[i][j] = 1
-                    flag = False
                 else:
                     self.__position[i][j] = 0
                 
@@ -102,9 +92,9 @@ class Particle:
         """
         for row in self.__position:
             if not (sum(row) == 1):
-                return False
+                return True
             
-        return True
+        return False
     
 
     def need_fix_column(self) -> bool:
@@ -115,9 +105,9 @@ class Particle:
         for i in range(self.__cells):
             column = [self.__position[j][i] for j in range(len(self.__position))]
             if sum(column) > self.__constrain:
-                return False
+                return True
             
-        return True    
+        return False    
 
     
     def fix_row(self) -> None:
@@ -127,16 +117,26 @@ class Particle:
         position = []
         for row in self.__position:
             if sum(row) > 1:
+                new_row = []
+                choices = []
                 for i in range(len(row)):
-                    row[i] = 0
-                new_position = random.randint(0, self.__cells - 1)
-                row[new_position] = 1
-                position.append(row)
+                    if row[i] == 1: choices.append(i)
+                    new_row.append(0)
+                
+                choice = random.choice(choices)
+
+                new_row[choice] = 1
+                position.append(new_row)
+            
+            elif sum(row) == 0:
+                new_row = [0 for _ in range(len(row))]
+                new_row[random.randint(0, len(row) - 1)] = 1
+                position.append(new_row)
 
             else:
                 position.append(row)
 
-        self.__position = position.copy()        
+        self.__position = copy.deepcopy(position)
                 
 
     def fix_column(self) -> None:
@@ -152,7 +152,7 @@ class Particle:
 
                     if suma > self.__constrain:
                         self.__position[j][i] = 0
-                        if j + 1 == len(self.__position):
+                        if i + 1 == self.__cells:
                             self.__position[j][0] = 1
                         else:
                             self.__position[j][i+1] = 1
@@ -179,21 +179,17 @@ class Particle:
                 for j in range(self.__cells):
                     if self.__position[valor][j] == 1:
                         repetidos.append(j)
-
+ 
             repetido = Counter(repetidos).most_common(1)[0][0]
             fila[repetido] = 1
-            aux.append(fila)             
-    
-        self.__position_aux = aux.copy()
+            aux.append(fila)
+       
+        self.__position_aux = copy.deepcopy(aux)
 
 
     @staticmethod
-    def sigmund(velocity:list) -> list:
-        lista = []
-        for i in range(len(velocity)):
-            lista.append(1/(1 + math.exp(-velocity[i])))
-
-        return lista    
+    def sigmund(valor:int) -> list: 
+        return 1/(1 + math.exp(-valor))
 
 
     def cost(self) -> int:
@@ -201,24 +197,24 @@ class Particle:
         Aqui se debera calcular el costo de la particula.
         """
         total_sum = 0
-
         # Primero las celdas
         for k in range(self.__cells):
             # Segundo las maquinas
             for i in range(len(self.__position)):
                 # Tercero las partes
                 for j in range(len(self.__position_aux)):
-                    total_sum += self.__position[i][k] * self.__position_aux[j][k] * ( 1 - self.__initial_matrix[i][j] )
+                    total_sum += self.__initial_matrix[i][j] * self.__position_aux[j][k] * ( 1 - self.__position[i][k] )
 
         return total_sum
     
 
     # Getters
-    get_velocity = lambda self: self.__velocity
     get_position = lambda self: self.__position
     get_position_aux = lambda self: self.__position_aux
-    get_best_position = lambda self: self.__best_position
-    get_best_position_aux = lambda self: self.__best_position_aux
-    get_best_fitness = lambda self: self.__best_fitness
     get_fitness = lambda self: self.__fitness
     get_index = lambda self: self.__index
+
+    #Setters
+    set_best_position = lambda self, best_position: setattr(self, "__best_position", best_position)
+    set_best_position_aux = lambda self, best_position_aux: setattr(self, "__best_position_aux", best_position_aux)
+    set_best_fitness = lambda self, best_fitness: setattr(self, "__best_fitness", best_fitness)
