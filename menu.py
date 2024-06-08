@@ -1,5 +1,6 @@
 from instancia import leer_archivo
 from poblacion import poblacion
+import settings
 from bpso import Bpso
 import time
 import os
@@ -23,11 +24,12 @@ def clean_screen():
 
 def resolve(matriz:list, cells:int, max_cells:int):
     start = time.time()
-    pob = poblacion(100, cells, len(matriz), max_cells)
-    bpso = Bpso(matriz, pob, len(matriz), cells, max_cells)
+    pob = poblacion(settings.ENJAMBRE, cells, len(matriz), max_cells)
+    bpso = Bpso(matriz, pob, len(matriz), cells, max_cells, settings.ITERACIONES, settings.ENJAMBRE, settings.VERBOSE)
 
     results = bpso.optimizer()
 
+    print("Resultados:\n")
     print("Matriz Maquina Celda:\n")
     for row in results[0]:
         print(row)

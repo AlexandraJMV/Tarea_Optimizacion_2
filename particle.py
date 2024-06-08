@@ -4,7 +4,7 @@ from collections import Counter
 import copy
 
 class Particle:
-    def __init__(self, num_dimensions:int, ciudadano:list, matrix:list, cells:int, constrain:int, index:int) -> None:
+    def __init__(self, num_dimensions:int, ciudadano:list, matrix:list, cells:int, constrain:int, index:int, verbose:bool) -> None:
         """
         Parametros:
         num_dimensions : int, cantidad de dimensiones de la particula
@@ -17,11 +17,12 @@ class Particle:
         """
 
         # variables estaticas
-        self.__index = index
+        self.__index = index + 1
         self.__num_dimensions = num_dimensions
         self.__cells = cells
         self.__constrain = constrain
         self.__initial_matrix = matrix.copy()
+        self.__verbose = verbose
 
         # Posiciones de la particula
         self.__position_aux = []
@@ -43,12 +44,44 @@ class Particle:
         """
         Aqui se debera evaluar la particula, es decir, calcular su fitness
         """
+        if self.__verbose:
+            print("===================================")
+            print(f"Particula {self.__index}\n")
+            print("Se revisara la posicion para que cumpla las restricciones")
+            print("Posicion actual :")
+            for row in self.__position:
+                print(row)
+            print("\n")
+
         if self.need_fix_row(): self.fix_row()
         if self.need_fix_column(): self.fix_column()
 
+        if self.__verbose:
+            print("Despues de la revision:")
+            print("Posicion despues de la revision :")
+            for row in self.__position:
+                print(row) 
+            print("\n")
+
         self.set_aux()
 
+        if self.__verbose:
+            print("Se calcula de manera determinista la matriz Parte Celda")
+            for row in self.__position_aux:
+                print(row)
+            print("\n")
+
         self.__fitness = self.cost()
+
+        if self.__verbose:
+            print("Se calcula el fitness")
+            print(f"fitness de la particula {self.__index} : {self.__fitness}\n")
+            print(f"El fintess actual : {self.__fitness} es menor al best fitness de la particula {self.__index} : {self.__best_fitness}\n")
+            if self.__fitness < self.__best_fitness:
+                print("Se actualiza los valores del best fitness")
+            else:
+                print("Se sigue con el mismo best fitness")
+            print("\n")
 
         if self.__fitness < self.__best_fitness:
             self.__best_fitness = self.__fitness
@@ -64,6 +97,14 @@ class Particle:
         c1 = 1
         c2 = 2
 
+        if self.__verbose:
+            print("===================================")
+            print(f"Particula {self.__index}")
+            print("Velocidad actual:")
+            for row in self.__velocity:
+                print(row)
+            print("\n")
+
         for i in range(self.__num_dimensions):
             for j in range(self.__cells):
                 r1=random.random()
@@ -72,17 +113,34 @@ class Particle:
                 vel_social = c2*r2*(pos_best_global[i][j] - self.__position[i][j])
                 self.__velocity[i][j] = weight*self.__velocity[i][j] + vel_cognitive + vel_social
 
+        if self.__verbose:
+            print("Nueva Velocidad:")
+            for row in self.__velocity:
+                print(row)
+            print("\n\n")
 
     def update_position(self) -> None:
         """
         Aqui se debera actualizar la posicion de la particula
         """
+        if self.__verbose:
+            print("Posicion actual:")
+            for row in self.__position:
+                print(row)
+            print("\n")
+
         for i in range(self.__num_dimensions):
             for j in range(self.__cells):
                 if random.random() < self.sigmund(self.__velocity[i][j]):
                     self.__position[i][j] = 1
                 else:
                     self.__position[i][j] = 0
+        
+        if self.__verbose:
+            print("Nueva posicion")
+            for row in self.__position:
+                print(row)
+            print("===================================\n\n")
                 
 
     def need_fix_row(self) -> bool:

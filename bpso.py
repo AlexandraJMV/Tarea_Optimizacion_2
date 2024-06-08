@@ -2,7 +2,7 @@ from particle import Particle
 import copy
 
 class Bpso():
-    def __init__(self, initial_matriz:list, poblation:list, num_dimensions:list, cells:int, constrain:int, iteraciones=1000, enjambre=100) -> None:
+    def __init__(self, initial_matriz:list, poblation:list, num_dimensions:list, cells:int, constrain:int, iteraciones:int, enjambre:int, verbose:bool) -> None:
         """
         Parametros:
         initial_matriz : list, matriz de maquina parte
@@ -20,10 +20,11 @@ class Bpso():
         self.__constrain = constrain
         self.__enjambre = enjambre
         self.__criterio_termino = iteraciones
+        self.__verbose = verbose
 
         self.__swarm = []
         for i in range(self.__enjambre):
-            particula = Particle(self.__num_dimensions, self.__poblation[i], self.__initial_matriz, self.__cells, self.__constrain, i)
+            particula = Particle(self.__num_dimensions, self.__poblation[i], self.__initial_matriz, self.__cells, self.__constrain, i, self.__verbose)
             self.__swarm.append(particula)
 
     def optimizer(self) -> list:
@@ -44,39 +45,74 @@ class Bpso():
 
         retorna el global best
         """
+
         iteracion = 0
         global_best = 1234567890123456789012345678901234567890
         pos_best = []
         pos_best_aux = []
+
+        if(self.__verbose):
+            print("===================================")
+            print("Criterio de termino por iteraciones")
+            print(f"iteraciones para el termino: {self.__criterio_termino}\n")
+            print(f"Cantidad de poblacion y particulas dentro del optimizer: {len(self.__swarm)}\n")
+            print("===================================\n")
+            
+            print("===================================")
+            print("Empieza las iteraciones hasta completar el criterio de termino")
+            print("===================================")
+
         while iteracion < self.__criterio_termino:
+
             local_best = 1234567890123456789012345678901234567890
             local_pos = []
             local_pos_aux = []
+
+            if(self.__verbose):
+                print("Se calculara el fiteness de cada particula: \n\n")
+
             for particula in self.__swarm:
                 particula.evaluate()
 
                 particle_local = particula.get_fitness()
+
+                if(self.__verbose):
+                    print(f"Fitness obtenido : {particle_local}\n")
+                    print(f"Mejor local actual : {local_best}\n")
+                    print(f"El fitness de la encontrado: {particle_local} es menor al local best: {local_best} ?\n")
+                    if particle_local < local_best:
+                        print(f"El nuevo local best es {particle_local}\n")
+                    else:
+                        print("No se cambia el valor del local best")
+                        print("===================================\n\n")
+
+
                 if particle_local < local_best:
                     local_best = particle_local
                     local_pos = copy.deepcopy(particula.get_position())
                     local_pos_aux = copy.deepcopy(particula.get_position_aux())
             
+            if self.__verbose:
+                print(f"El mejor local : {local_best} es menor al mejor global {global_best} ?\n")
+                if local_best < global_best:
+                    print("Se actualiza el valor del global best")
+                else:
+                    print("Se sigue con el mismo global best")
+
             if local_best < global_best:
                 global_best = local_best
                 pos_best = copy.deepcopy(local_pos)
                 pos_best_aux = copy.deepcopy(local_pos_aux)
                 
             
-            
+            if self.__verbose:
+                print("Se modifica los valores de la velocidad y posicion de cada particula")
+                print("===================================")
+
             for particula in self.__swarm:
                 best = copy.deepcopy(pos_best)
-                aux = copy.deepcopy(pos_best_aux)
-                fitness = particula.get_fitness()
                 particula.update_velocity(best)
                 particula.update_position()
-                particula.set_best_position(best)
-                particula.set_best_position_aux(aux)
-                particula.set_best_fitness(global_best)
             
             iteracion += 1
 
