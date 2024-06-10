@@ -1,8 +1,10 @@
 # Grupo 10
 
-* Ademir Muñoz
-* Alexandra Mendoza
-* Jorge Palacios
+## Integrantes
+
+- Ademir Muñoz 20.158.396-9
+- Alexandra Mendoza 21.072.504-0
+- Jorge Palacios 21.064.290-0
 
 # Ejecución
 
@@ -37,8 +39,12 @@ ENJAMBRE=5
 
 Esos son sus valores por defecto, pero pueden ser cambiadas en cualquier momento.
 
-* **VERBOSE**: Si es verdadero muestra en detalle lo que pasa dentro de la ejecucion del bspo y particle.
+- **VERBOSE**: Si es verdadero muestra en detalle lo que pasa dentro de la ejecucion del bspo y particle.
 
-* **ITERACIONES**: Es el criterio de termino
+- **ITERACIONES**: Es el criterio de termino
 
-* **ENJAMBRE**: Es la cantidad de poblacion y particulas a utilizar dentro del bspo
+- **ENJAMBRE**: Es la cantidad de poblacion y particulas a utilizar dentro del bspo
+
+Este codigo esta basado en un codigo de github:
+[github link]
+[github link]: https://github.com/nathanrooy/particle-swarm-optimization.git
